@@ -10,6 +10,7 @@ if __name__ == "__main__":
     tweetCount = 0
     tweetsPerQry = 100
     maxTweets = 1000000
+    count = 0
 
     if(len(sys.argv) < 2):
         print("Error, you must specify the vaccine")
@@ -26,7 +27,7 @@ if __name__ == "__main__":
 
     if(len(sys.argv) > 2):
         maxID = sys.argv[2]
-        print("Using maxid: "+str(maxID))
+        print("Using max_id: "+str(maxID))
 
     while tweetCount < maxTweets:
         if(maxId <= 0):
@@ -45,6 +46,7 @@ if __name__ == "__main__":
         print("Tweets: "+str(tweetCount))
         maxId = newTweets["statuses"][-1]["id"]
         print("Max id: "+str(maxId))
-        if not (tweetCount % 1000):
+        count += 1
+        if not (count % 10):
             print("Going to sleep")
             time.sleep(5)
