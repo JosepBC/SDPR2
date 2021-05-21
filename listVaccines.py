@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from lithops import FunctionExecutor
-from lithops.storage.cloud_proxy import open, os
+from lithops.storage.cloud_proxy import os
 from lithops.multiprocessing import Pool
 
 def remoteList(vaccine):
