@@ -13,11 +13,12 @@ if __name__ == "__main__":
     count = 0
 
     if(len(sys.argv) == 1):
-        print("Format: twitterCrawler.py vaccine query max_id")
+        print("[ERROR]: Format: twitterCrawler.py vaccine query max_id")
+        exit()
 
     if(len(sys.argv) < 2):
-        print("Error, you must specify the vaccine")
-        exit
+        print("[ERROR]: You must specify the vaccine")
+        exit()
     
     vaccine = sys.argv[1]
     print("Vaccine: "+str(vaccine))
