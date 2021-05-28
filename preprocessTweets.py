@@ -2,9 +2,10 @@
 from lithops.executors import FunctionExecutor
 from lithops.multiprocessing import Pool
 from lithops.storage.cloud_proxy import os, open
+import mtranslate
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from dateutil import parser
-import json, csv, sys
+import json, csv
 
 def ls(path):
     paths = []
@@ -14,84 +15,95 @@ def ls(path):
     return paths
 
 def get_tweet_sentiment(tweetText):
+    #Translate to spanish using mtranslate
+    ready_proces = mtranslate.translate(tweetText, to_language="en")
+    #Sentiment analysis
     sia = SentimentIntensityAnalyzer()
-    return sia.polarity_scores(tweetText)['compound']
+    return str(sia.polarity_scores(ready_proces)["compound"])
 
-def process_tweet(tweetPath):
-    with open(tweetPath, mode="r") as f:
+def make_chunks(path):
+    size = 1000
+    lst = ls(path)
+    return [lst[i:i + size] for i in range(0, len(lst), size)]
+
+def process_tweet(path):
+    with open(path, mode = "r") as f:
         tweet = json.load(f)
-    vaccine = tweetPath.split("/")[1]
+    vaccine = path.split("/")[1]
     id_str = tweet["id_str"]
     date = str(parser.parse(tweet["created_at"]).date())
     userLoc = tweet["user"]["location"]
-    sentiment = "0"#get_tweet_sentiment(tweet["full_text"])
+    geo = str(tweet["geo"])
+    sentiment = get_tweet_sentiment(tweet["full_text"])
     
-    #with open("PreProcessed/"+vaccine+"/"+id_str+".csv", mode = 'w') as csvf:
-    #    outF = csv.writer(csvf, delimiter = ";")
-    #    outF.writerow((vaccine, id_str, date, userLoc, sentiment))
+    if geo == "None":
+        geo = ""
+    return [vaccine, id_str, date, userLoc, geo, sentiment]
 
-    return
-    #return {"vaccine": vaccine, "id_str": id_str, "date": date, "userLoc": userLoc, "sentiment": sentiment}
-
-def group_by_vaccine(results):
-    grouped = {"Pfizer":[], "Janssen":[], "Moderna":[], "astrazeneca":[], "sputnik": []}
-
-    for val in results:
-        grouped[val["vaccine"]].append(val)
-        
-    return grouped
-
-def write_cos(vaccine):
-    paths = ls("PreProcessed/"+vaccine)
-    with open("Processed/"+vaccine+".csv", mode = "w") as csvFile:
+def process_chunk(paths):
+    out_data = []
+    if type(paths) is list:
+        vaccine = paths[0].split("/")[1]
+        first_file = paths[0].split("/")[2].split(".")[0]
+        last_file = paths[-1].split("/")[2].split(".")[0]
         for path in paths:
-            with open(path, mode = "r") as srcF:
-                csvFile.write(srcF.read())
+            out_data.append(process_tweet(path))
+    elif type(paths) is str: #If one chunk is of one path
+        vaccine = paths.split("/")[1]
+        first_file = last_file = paths.split("/")[2].split(".")[0]
+        out_data.append(process_tweet(paths))
+    else:
+        return False
 
-    return True
+    out_file_name = "ProcesedChunks/"+vaccine+"/"+first_file+"_"+last_file+".csv"            
+    with open(out_file_name, mode = "w") as out_file:
+        csv_out = csv.writer(out_file)
+        csv_out.writerows(out_data)
+    
 
-def join_paths(results):
-    joined = []
-    for groupPaths in results:
-        for path in groupPaths:
-            joined.append(path)
-    return joined
+def reduce_csv(results):
+    vaccine_name = results[0][0].decode("utf-8").split(",")[0]
+    with open("Processed/"+vaccine_name+".csv", mode = "w") as out_f:
+        for file in results:
+            for line in file:
+                out_f.write(line.decode("utf-8")+"\n")
+
+def read_csv(obj):
+    return obj.data_stream.read().splitlines()
+
+def write_data(results):
+    vaccine = results[0][0][0]
+    with open("Procesed/"+vaccine+".csv", mode = "w") as out_f:
+        csv_out = csv.writer(out_f)
+        csv_out.writerows(results[0])
 
 if __name__ == "__main__":
-    vaccinePathList = ["RawData/Pfizer", "RawData/Janssen", "RawData/Moderna", "RawData/astrazeneca", "RawData/sputnik"]
+    vaccine_path_list = ["RawData/sputnik", "RawData/Moderna", "RawData/Pfizer", "RawData/Janssen", "RawData/astrazeneca"]
+
+    print("**************************************************************************")
+    print("Making chunks of "+str(vaccine_path_list))
+    print("**************************************************************************")
     with Pool() as pool:
-        #Paralel ls over each vaccine folder of the bucket
-        print("*****************************")
-        print("Starting ls")
-        print("*****************************")
-        allPaths = pool.map(ls, vaccinePathList)
+        all_paths_chunks = pool.map(make_chunks, vaccine_path_list)
 
-    with FunctionExecutor() as fexec:
-        for groupPath in allPaths:
-            for path in groupPath:
-                fexec.call_async(process_tweet, path)
-        
-        print(fexec.get_result())
-
-    #with Pool() as pool:
-    #    #Process each file individually in diferent threads
-    #    print("*****************************")
-    #    print("Starting to process tweets")
-    #    print("*****************************")
-    #    for groupPath in allPaths:
-    #        res = pool.map(process_tweet, groupPath)
-    #    
-    #    print(res)
+    for vaccine in all_paths_chunks:
+        vaccine_name = vaccine[0][0].split("/")[1]
+        print("**************************************************************************")
+        print("Starting to process vaccine: "+vaccine_name+" has "+str(len(vaccine))+" chunks")
+        with FunctionExecutor() as fexec:
+            for chunk in vaccine:
+                fexec.call_async(process_chunk, chunk)
+            
+            fexec.wait()
+        print("**************************************************************************")
     
-    """
-    print("*****************************")
-    print("Starting to write csv")
-    print("*****************************")
-    vaccineList = ["Pfizer", "Janssen", "Moderna", "astrazeneca", "sputnik"]
+    print("**************************************************************************")
+    print("Starting to reduce chunks")
     with FunctionExecutor() as fexec:
-        #Write each vaccine elems in one csv, one thread per vaccine
-        for vaccine in vaccineList:
-            fexec.call_async(write_cos, vaccine)
-        
-        print(fexec.get_result())
-        """
+        for vaccine in vaccine_path_list:
+            vaccine_name = vaccine.split("/")[1]
+            print("Starting to reduce "+vaccine_name+" chunks")
+            fexec.map_reduce(read_csv, "cos://practica-2-sd-twitter-vacunas/ProcesedChunks/"+vaccine_name+"/", reduce_csv)
+        fexec.wait()
+    print("Tweets preprocessed successfully!")
+    print("**************************************************************************")
