@@ -27,7 +27,7 @@ def make_chunks(path):
     return [lst[i:i + size] for i in range(0, len(lst), size)]
 
 def process_tweet(path):
-    with open(path, mode = "r") as f:
+    with open(path, mode = "r", encoding='latin1') as f:
         tweet = json.load(f)
     vaccine = path.split("/")[1]
     id_str = tweet["id_str"]
