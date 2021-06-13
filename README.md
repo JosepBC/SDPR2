@@ -5,7 +5,7 @@ The pakages needed by this application are located [here](requirements.txt).\
 As this aplication uses [Lithops API](https://github.com/lithops-cloud/lithops) you must have a .lithops_config configured with the COS and CF backend you want to use.
 ## Data crawler
 For this stage we have decided to crawl the data from twitter and implemented all the logic in
-[twitterCrawler.py](blob/master/twitterCrawler.py).\
+[twitterCrawler.py](twitterCrawler.py).\
 To launch this script use
 ```bash
 python3 twitterCrawler.py [vaccine] [query] [max_id]
