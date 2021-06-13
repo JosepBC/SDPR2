@@ -10,7 +10,7 @@ To launch this script use
 ```bash
 python3 twitterCrawler.py [vaccine] [query] [max_id]
 ```
-In order to crawl the tweets is mandatory to have a .env file with your Twitter api keys see an example [here](.env_example).
+In order to crawl the tweets is mandatory to have a .env file with your Twitter API keys see an example [here](.env_example).
 ## Data preprocessing
 The second stage is implemented in [preprocessTweets.py](preprocessTweets.py).\
 To launch the script use
