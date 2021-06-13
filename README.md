@@ -11,13 +11,13 @@ To launch this script use
 python3 twitterCrawler.py [vaccine] [query] [max_id]
 ```
 ## Data preprocessing
-The second stage is implemented in [preprocessTweets.py](blob/master/preprocessTweets.py).\
+The second stage is implemented in [preprocessTweets.py](preprocessTweets.py).\
 To launch the script use
 ```bash
 python3 preprocessTweets.py
 ```
 ## Plots
-The final stage is implemented in [graph.py](blob/master/graph.py), we have decided to make de following plots:
+The final stage is implemented in [graph.py](graph.py), we have decided to make de following plots:
 1. Global histogram
 2. Histogram per vaccine
 3. Sentiment stacked bar
