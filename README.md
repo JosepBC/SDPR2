@@ -1,7 +1,7 @@
 # Big Data challenge
-This repository has all the necessary scripts to lauch our solution for the big data challenge organized by cloud button.
+This repository has all the necessary scripts to launch our solution for the big data challenge organized by CloudButton.
 ## Requirements
-The pakages needed by this application are located [here](requirements.txt).\
+The pakages needed by this application are specified [here](requirements.txt).\
 As this aplication uses [Lithops API](https://github.com/lithops-cloud/lithops) you must have a .lithops_config configured with the COS and CF backend you want to use.
 ## Data crawler
 For this stage we have decided to crawl the data from twitter and implemented all the logic in
