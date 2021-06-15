@@ -18,12 +18,13 @@ To launch the script use
 python3 preprocessTweets.py
 ```
 ## Plots
-The final stage is implemented in [graph.py](graph.py), we have decided to make de following plots:
+The final stage is implemented in [graph.py](graph.py) and in a Jupyter Notebook [graph_notebook.ipynb](graph_notebook.ipynb).\
+We have decided to make de following plots:
 1. Global histogram
 2. Histogram per vaccine
 3. Sentiment stacked bar
 
-To launch this stage use
+To launch the script of this stage use
 ```bash
 python3 graph.py
 ```
